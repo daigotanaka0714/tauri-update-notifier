@@ -1,6 +1,12 @@
 # tauri-update-notifier
 
+[![npm version](https://img.shields.io/npm/v/tauri-update-notifier)](https://www.npmjs.com/package/tauri-update-notifier)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+
 A lightweight update notification library for Tauri applications using GitHub Releases.
+
+![Update Notification Demo](https://raw.githubusercontent.com/daigotanaka0714/tauri-update-notifier/main/screenshots/demo-full.png)
 
 ## Features
 
@@ -19,6 +25,18 @@ pnpm add tauri-update-notifier
 # or
 yarn add tauri-update-notifier
 ```
+
+## Prerequisites: GitHub Releases Setup
+
+This library checks for updates by fetching the latest release from your GitHub repository. Make sure your repository has releases configured correctly:
+
+1. **Create a Release** on GitHub (`Releases` → `Create a new release`)
+2. **Use semantic versioning** for tags (e.g., `v1.0.0`, `1.0.0`)
+3. **Publish the release** (draft releases are ignored)
+
+Example release tag: `v1.2.0` or `1.2.0`
+
+> **Note:** Pre-release versions are ignored by default. Set `includePrerelease: true` to include them.
 
 ## Usage
 
@@ -148,6 +166,21 @@ const {
 } = useUpdateChecker(options);
 ```
 
+## Rate Limiting
+
+This library uses the GitHub REST API without authentication. Be aware of the following limits:
+
+| Type | Limit |
+|------|-------|
+| Unauthenticated requests | 60 requests/hour per IP |
+
+**Best practices:**
+- Set `checkOnMount: false` and trigger checks manually if needed
+- Use `checkInterval` sparingly (e.g., once per hour: `3600000`)
+- The component includes a 2-second delay before the first check to avoid blocking app startup
+
+For most desktop applications, these limits are more than sufficient since each user has their own IP address.
+
 ## Customization
 
 ### Custom Styles
@@ -246,6 +279,38 @@ compareVersions('1.0.0', '1.0.1'); // -1 (1.0.0 < 1.0.1)
 compareVersions('2.0.0', '1.9.9'); //  1 (2.0.0 > 1.9.9)
 compareVersions('v1.0.0', '1.0.0'); // 0 (equal, 'v' prefix handled)
 ```
+
+## Development
+
+### Running the Demo
+
+To see the notification UI in action:
+
+```bash
+# Clone the repository
+git clone https://github.com/daigotanaka0714/tauri-update-notifier.git
+cd tauri-update-notifier
+
+# Install dependencies
+pnpm install
+
+# Start the demo server
+pnpm demo
+```
+
+Then open http://localhost:3000/demo/index.html in your browser.
+
+### Taking Screenshots
+
+```bash
+# Install Playwright browser (first time only)
+pnpm playwright:install
+
+# Capture screenshots
+pnpm screenshot
+```
+
+Screenshots are saved to the `screenshots/` directory.
 
 ## License
 

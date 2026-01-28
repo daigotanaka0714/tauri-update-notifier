@@ -26,3 +26,10 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Demo build output
+demo-dist/
+
+# Playwright
+playwright-report/
+test-results/

@@ -30,7 +30,11 @@
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "demo": "vite --port 3000",
+    "demo:build": "vite build",
+    "screenshot": "pnpm exec playwright test",
+    "playwright:install": "pnpm exec playwright install chromium"
   },
   "keywords": [
     "tauri",
@@ -52,9 +56,9 @@
   },
   "homepage": "https://github.com/daigotanaka0714/tauri-update-notifier#readme",
   "peerDependencies": {
+    "@tauri-apps/plugin-shell": ">=2.0.0",
     "react": ">=17.0.0",
-    "react-dom": ">=17.0.0",
-    "@tauri-apps/plugin-shell": ">=2.0.0"
+    "react-dom": ">=17.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -68,13 +72,16 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
+    "vite": "^7.3.1",
     "vitest": "^1.0.0"
   }
 }
