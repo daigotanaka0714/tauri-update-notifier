@@ -1,6 +1,7 @@
 # tauri-update-notifier
 
 [![npm version](https://img.shields.io/npm/v/tauri-update-notifier)](https://www.npmjs.com/package/tauri-update-notifier)
+[![npm downloads](https://img.shields.io/npm/dm/tauri-update-notifier)](https://www.npmjs.com/package/tauri-update-notifier)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
@@ -19,11 +20,7 @@ A lightweight update notification library for Tauri applications using GitHub Re
 ## Installation
 
 ```bash
-npm install tauri-update-notifier
-# or
 pnpm add tauri-update-notifier
-# or
-yarn add tauri-update-notifier
 ```
 
 ## Prerequisites: GitHub Releases Setup
