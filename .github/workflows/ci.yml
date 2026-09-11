@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - main
+  # IMPORTANT: do not filter by target branch.
+  #   Restricting this to main means a stacked PR - one whose base is another
+  #   PR's branch - gets no checks at all and can be merged unverified.
   pull_request:
-    branches:
-      - main
 
 jobs:
   test:
@@ -52,7 +53,7 @@ jobs:
         # bin/agent-check).
         run: |
           echo "::group::vitest"
-          pnpm test
+          pnpm test:coverage
           echo "::endgroup::"
 
       - name: Build (published package)

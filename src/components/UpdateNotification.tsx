@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -115,9 +116,26 @@ export function useUpdateChecker(options: {
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const performCheck = useCallback(async () => {
-    if (isChecking) return null;
+  // IMPORTANT: keep the callbacks and the in-flight flag in refs.
+  //
+  //   Putting them in performCheck's dependency array changes performCheck's
+  //   identity on every check. performCheck is also a dependency of the
+  //   effect below, so that effect tears down and re-arms its 2-second
+  //   "check once on mount" timer every time - forever.
+  //   The result was a request to the GitHub API every 2 seconds even with
+  //   checkInterval: 0 (disabled). The unauthenticated GitHub API allows 60
+  //   requests per hour, so that budget is gone in two minutes and every
+  //   later check fails with 403. Found by measuring it in a test.
+  const isCheckingRef = useRef(false);
+  const onUpdateAvailableRef = useRef(onUpdateAvailable);
+  const onErrorRef = useRef(onError);
+  onUpdateAvailableRef.current = onUpdateAvailable;
+  onErrorRef.current = onError;
 
+  const performCheck = useCallback(async () => {
+    if (isCheckingRef.current) return null;
+
+    isCheckingRef.current = true;
     setIsChecking(true);
     setError(null);
 
@@ -132,27 +150,20 @@ export function useUpdateChecker(options: {
       setUpdateInfo(info);
 
       if (info.isUpdateAvailable) {
-        onUpdateAvailable?.(info);
+        onUpdateAvailableRef.current?.(info);
       }
 
       return info;
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
-      onError?.(error);
+      onErrorRef.current?.(error);
       return null;
     } finally {
+      isCheckingRef.current = false;
       setIsChecking(false);
     }
-  }, [
-    owner,
-    repo,
-    currentVersion,
-    includePrerelease,
-    isChecking,
-    onUpdateAvailable,
-    onError,
-  ]);
+  }, [owner, repo, currentVersion, includePrerelease]);
 
   // Check on mount
   useEffect(() => {

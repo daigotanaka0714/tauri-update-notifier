@@ -84,8 +84,11 @@ run_stage typecheck "tsc --noEmit" \
 # e2e (Playwright screenshot capture) is not part of the gate: it needs a browser
 # install and only produces the README images - it verifies nothing about the
 # library itself. Run it by hand with `pnpm e2e`.
-run_stage test "vitest run" \
-  env NODE_ENV="$NODE_ENV_TEST" $PNPM exec vitest run || OK=0
+#
+# Coverage is measured here too. vitest.config.ts carries the thresholds, so a
+# drop fails this stage. Coverage that nobody acts on is not worth measuring.
+run_stage test "vitest run --coverage (thresholds enforced)" \
+  env NODE_ENV="$NODE_ENV_TEST" $PNPM exec vitest run --coverage || OK=0
 
 run_stage build "tsup (builds the published package)" \
   env NODE_ENV="$NODE_ENV_BUILD" $PNPM exec tsup || OK=0
