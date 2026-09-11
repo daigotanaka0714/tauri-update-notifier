@@ -23,12 +23,16 @@
 
 export {
   UpdateNotification,
-  useUpdateChecker,
-  type UpdateNotificationProps,
-  type UpdateNotificationStyles,
   type UpdateNotificationClassNames,
+  type UpdateNotificationProps,
   type UpdateNotificationRenderProps,
-} from './components/UpdateNotification';
+  type UpdateNotificationStyles,
+  useUpdateChecker,
+} from "./components/UpdateNotification";
 
 // Re-export core types for convenience
-export type { UpdateInfo, UpdateCheckerOptions, ReleaseAsset } from './updateChecker';
+export type {
+  ReleaseAsset,
+  UpdateCheckerOptions,
+  UpdateInfo,
+} from "./updateChecker";

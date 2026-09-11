@@ -1,0 +1,6 @@
+# pnpm 11 and later require build scripts to be allowed explicitly.
+# esbuild is used by vite and tsup, so allow it.
+# Without this, `pnpm install` and `pnpm add` abort with
+# "Ignored build scripts" and nothing gets built.
+allowBuilds:
+  esbuild: true

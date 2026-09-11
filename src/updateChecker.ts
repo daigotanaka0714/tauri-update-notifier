@@ -76,10 +76,10 @@ interface GitHubRelease {
  */
 export function compareVersions(v1: string, v2: string): number {
   // Remove 'v' prefix if present
-  const normalize = (v: string) => v.replace(/^v/i, '');
+  const normalize = (v: string) => v.replace(/^v/i, "");
 
-  const parts1 = normalize(v1).split('.').map(Number);
-  const parts2 = normalize(v2).split('.').map(Number);
+  const parts1 = normalize(v1).split(".").map(Number);
+  const parts2 = normalize(v2).split(".").map(Number);
 
   const maxLength = Math.max(parts1.length, parts2.length);
 
@@ -111,7 +111,7 @@ export function compareVersions(v1: string, v2: string): number {
  * ```
  */
 export async function checkForUpdates(
-  options: UpdateCheckerOptions
+  options: UpdateCheckerOptions,
 ): Promise<UpdateInfo> {
   const {
     owner,
@@ -125,8 +125,8 @@ export async function checkForUpdates(
 
   const response = await customFetch(apiUrl, {
     headers: {
-      Accept: 'application/vnd.github.v3+json',
-      'User-Agent': `${repo}-update-checker`,
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": `${repo}-update-checker`,
     },
   });
 
@@ -137,7 +137,7 @@ export async function checkForUpdates(
     }
     throw new UpdateCheckError(
       `GitHub API error: ${response.status} ${response.statusText}`,
-      response.status
+      response.status,
     );
   }
 
@@ -161,7 +161,7 @@ export async function checkForUpdates(
     latestVersion,
     isUpdateAvailable,
     releaseUrl: release.html_url,
-    releaseNotes: release.body || '',
+    releaseNotes: release.body || "",
     publishedAt: release.published_at,
     assets: release.assets.map((asset) => ({
       name: asset.name,
@@ -178,10 +178,10 @@ export async function checkForUpdates(
 export class UpdateCheckError extends Error {
   constructor(
     message: string,
-    public statusCode?: number
+    public statusCode?: number,
   ) {
     super(message);
-    this.name = 'UpdateCheckError';
+    this.name = "UpdateCheckError";
   }
 }
 
@@ -190,9 +190,9 @@ function createNoUpdateResponse(currentVersion: string): UpdateInfo {
     currentVersion,
     latestVersion: currentVersion,
     isUpdateAvailable: false,
-    releaseUrl: '',
-    releaseNotes: '',
-    publishedAt: '',
+    releaseUrl: "",
+    releaseNotes: "",
+    publishedAt: "",
     assets: [],
   };
 }
@@ -245,11 +245,11 @@ export const dismissedVersionStorage = {
 
 // Legacy exports for backward compatibility
 export const isVersionDismissed = dismissedVersionStorage.isDismissed.bind(
-  dismissedVersionStorage
+  dismissedVersionStorage,
 );
 export const dismissVersion = dismissedVersionStorage.dismiss.bind(
-  dismissedVersionStorage
+  dismissedVersionStorage,
 );
 export const clearDismissedVersion = dismissedVersionStorage.clear.bind(
-  dismissedVersionStorage
+  dismissedVersionStorage,
 );

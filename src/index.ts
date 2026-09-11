@@ -41,13 +41,13 @@
 
 export {
   checkForUpdates,
+  clearDismissedVersion,
   compareVersions,
   dismissedVersionStorage,
-  isVersionDismissed,
   dismissVersion,
-  clearDismissedVersion,
-  UpdateCheckError,
-  type UpdateInfo,
-  type UpdateCheckerOptions,
+  isVersionDismissed,
   type ReleaseAsset,
-} from './updateChecker';
+  UpdateCheckError,
+  type UpdateCheckerOptions,
+  type UpdateInfo,
+} from "./updateChecker";

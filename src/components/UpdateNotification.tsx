@@ -1,9 +1,15 @@
-import { useState, useEffect, useCallback, type CSSProperties, type ReactNode } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import {
   checkForUpdates,
   dismissedVersionStorage,
   type UpdateInfo,
-} from '../updateChecker';
+} from "../updateChecker";
 
 /**
  * Props for the UpdateNotification component
@@ -34,7 +40,7 @@ export interface UpdateNotificationProps {
   /** Custom render function for complete control */
   render?: (props: UpdateNotificationRenderProps) => ReactNode;
   /** Position of the notification */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
 }
 
 /**
@@ -138,7 +144,15 @@ export function useUpdateChecker(options: {
     } finally {
       setIsChecking(false);
     }
-  }, [owner, repo, currentVersion, includePrerelease, isChecking, onUpdateAvailable, onError]);
+  }, [
+    owner,
+    repo,
+    currentVersion,
+    includePrerelease,
+    isChecking,
+    onUpdateAvailable,
+    onError,
+  ]);
 
   // Check on mount
   useEffect(() => {
@@ -183,95 +197,99 @@ export function useUpdateChecker(options: {
 // Default styles
 const defaultStyles: Required<UpdateNotificationStyles> = {
   container: {
-    position: 'fixed',
+    position: "fixed",
     zIndex: 9999,
-    maxWidth: '24rem',
+    maxWidth: "24rem",
   },
   card: {
-    backgroundColor: '#1e1e2e',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '0.5rem',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    overflow: 'hidden',
+    backgroundColor: "#1e1e2e",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    borderRadius: "0.5rem",
+    boxShadow:
+      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    overflow: "hidden",
   },
   header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0.75rem 1rem',
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0.75rem 1rem",
+    backgroundColor: "rgba(99, 102, 241, 0.2)",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   content: {
-    padding: '0.75rem 1rem',
+    padding: "0.75rem 1rem",
   },
   title: {
     fontWeight: 500,
-    color: '#e1e1e6',
+    color: "#e1e1e6",
   },
   version: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.875rem',
-    marginBottom: '0.75rem',
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    fontSize: "0.875rem",
+    marginBottom: "0.75rem",
   },
   releaseNotes: {
-    fontSize: '0.75rem',
-    color: '#a1a1aa',
-    backgroundColor: '#0d0d14',
-    borderRadius: '0.25rem',
-    padding: '0.5rem',
-    marginBottom: '0.75rem',
-    maxHeight: '5rem',
-    overflowY: 'auto' as const,
+    fontSize: "0.75rem",
+    color: "#a1a1aa",
+    backgroundColor: "#0d0d14",
+    borderRadius: "0.25rem",
+    padding: "0.5rem",
+    marginBottom: "0.75rem",
+    maxHeight: "5rem",
+    overflowY: "auto" as const,
   },
   buttons: {
-    display: 'flex',
-    gap: '0.5rem',
+    display: "flex",
+    gap: "0.5rem",
   },
   downloadButton: {
     flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 0.75rem',
-    backgroundColor: '#6366f1',
-    color: 'white',
-    border: 'none',
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    padding: "0.5rem 0.75rem",
+    backgroundColor: "#6366f1",
+    color: "white",
+    border: "none",
+    borderRadius: "0.375rem",
+    fontSize: "0.875rem",
     fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    cursor: "pointer",
+    transition: "background-color 0.2s",
   },
   skipButton: {
-    padding: '0.5rem 0.75rem',
-    backgroundColor: 'transparent',
-    color: '#a1a1aa',
-    border: 'none',
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    padding: "0.5rem 0.75rem",
+    backgroundColor: "transparent",
+    color: "#a1a1aa",
+    border: "none",
+    borderRadius: "0.375rem",
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
   },
   closeButton: {
-    padding: '0.25rem',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '0.25rem',
-    cursor: 'pointer',
-    color: '#a1a1aa',
-    transition: 'background-color 0.2s',
+    padding: "0.25rem",
+    backgroundColor: "transparent",
+    border: "none",
+    borderRadius: "0.25rem",
+    cursor: "pointer",
+    color: "#a1a1aa",
+    transition: "background-color 0.2s",
   },
 };
 
-const positionStyles: Record<NonNullable<UpdateNotificationProps['position']>, CSSProperties> = {
-  'bottom-right': { bottom: '1rem', right: '1rem' },
-  'bottom-left': { bottom: '1rem', left: '1rem' },
-  'top-right': { top: '1rem', right: '1rem' },
-  'top-left': { top: '1rem', left: '1rem' },
+const positionStyles: Record<
+  NonNullable<UpdateNotificationProps["position"]>,
+  CSSProperties
+> = {
+  "bottom-right": { bottom: "1rem", right: "1rem" },
+  "bottom-left": { bottom: "1rem", left: "1rem" },
+  "top-right": { top: "1rem", right: "1rem" },
+  "top-left": { top: "1rem", left: "1rem" },
 };
 
 /**
@@ -307,14 +325,11 @@ export function UpdateNotification({
   styles: customStyles = {},
   classNames = {},
   render,
-  position = 'bottom-right',
+  position = "bottom-right",
 }: UpdateNotificationProps) {
   const [isVisible, setIsVisible] = useState(false);
 
-  const {
-    updateInfo,
-    dismissUpdate,
-  } = useUpdateChecker({
+  const { updateInfo, dismissUpdate } = useUpdateChecker({
     owner,
     repo,
     currentVersion,
@@ -345,11 +360,11 @@ export function UpdateNotification({
         if (onOpenUrl) {
           await onOpenUrl(updateInfo.releaseUrl);
         } else {
-          window.open(updateInfo.releaseUrl, '_blank');
+          window.open(updateInfo.releaseUrl, "_blank");
         }
       } catch (error) {
-        console.error('Failed to open URL:', error);
-        window.open(updateInfo.releaseUrl, '_blank');
+        console.error("Failed to open URL:", error);
+        window.open(updateInfo.releaseUrl, "_blank");
       }
     }
   }, [updateInfo, onOpenUrl]);
@@ -388,8 +403,9 @@ export function UpdateNotification({
       <div style={styles.card} className={classNames.card}>
         {/* Header */}
         <div style={styles.header} className={classNames.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <svg
+              aria-hidden="true"
               width="18"
               height="18"
               viewBox="0 0 24 24"
@@ -408,12 +424,14 @@ export function UpdateNotification({
             </span>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
             style={styles.closeButton}
             className={classNames.closeButton}
             aria-label="Close"
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -431,31 +449,46 @@ export function UpdateNotification({
 
         {/* Content */}
         <div style={styles.content} className={classNames.content}>
-          <p style={{ fontSize: '0.875rem', color: '#a1a1aa', marginBottom: '0.5rem' }}>
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "#a1a1aa",
+              marginBottom: "0.5rem",
+            }}
+          >
             A new version is available!
           </p>
           <div style={styles.version} className={classNames.version}>
-            <span style={{ color: '#a1a1aa' }}>{updateInfo.currentVersion}</span>
-            <span style={{ color: '#a1a1aa' }}>→</span>
-            <span style={{ color: '#6366f1', fontWeight: 500 }}>{updateInfo.latestVersion}</span>
+            <span style={{ color: "#a1a1aa" }}>
+              {updateInfo.currentVersion}
+            </span>
+            <span style={{ color: "#a1a1aa" }}>→</span>
+            <span style={{ color: "#6366f1", fontWeight: 500 }}>
+              {updateInfo.latestVersion}
+            </span>
           </div>
 
           {/* Release notes preview */}
           {updateInfo.releaseNotes && (
-            <div style={styles.releaseNotes} className={classNames.releaseNotes}>
+            <div
+              style={styles.releaseNotes}
+              className={classNames.releaseNotes}
+            >
               {updateInfo.releaseNotes.slice(0, 200)}
-              {updateInfo.releaseNotes.length > 200 && '...'}
+              {updateInfo.releaseNotes.length > 200 && "..."}
             </div>
           )}
 
           {/* Actions */}
           <div style={styles.buttons} className={classNames.buttons}>
             <button
+              type="button"
               onClick={handleDownload}
               style={styles.downloadButton}
               className={classNames.downloadButton}
             >
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -472,6 +505,7 @@ export function UpdateNotification({
               Download
             </button>
             <button
+              type="button"
               onClick={handleSkipVersion}
               style={styles.skipButton}
               className={classNames.skipButton}

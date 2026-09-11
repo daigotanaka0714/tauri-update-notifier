@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # IMPORTANT: do not write a version here. .node-version is the
+          # single source of truth. A number written here drifts from local
+          # and produces "green in CI, red locally" (or the reverse).
+          node-version-file: '.node-version'
+
+      - name: Install pnpm
+        # IMPORTANT: do not write a version here. package.json's
+        # packageManager field is the single source of truth (corepack reads
+        # the same value locally).
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: |
+          echo "::group::pnpm install"
+          pnpm install --frozen-lockfile
+          echo "::endgroup::"
+
+      - name: Check Biome (format + lint)
+        run: |
+          echo "::group::biome check"
+          pnpm exec biome check --error-on-warnings .
+          echo "::endgroup::"
+
+      - name: Check TypeScript
+        run: |
+          echo "::group::tsc --noEmit"
+          pnpm typecheck
+          echo "::endgroup::"
+
+      - name: Test
+        # e2e (Playwright) is not run here: it only captures screenshots for
+        # the README and verifies nothing about the library (same policy as
+        # bin/agent-check).
+        run: |
+          echo "::group::vitest"
+          pnpm test
+          echo "::endgroup::"
+
+      - name: Build (published package)
+        run: |
+          echo "::group::tsup"
+          pnpm build
+          echo "::endgroup::"

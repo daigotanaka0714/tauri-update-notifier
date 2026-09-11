@@ -33,3 +33,7 @@ demo-dist/
 # Playwright
 playwright-report/
 test-results/
+
+# Claude Code config. Ignore only the machine-local file; the /bugfix and
+# /investigate commands referenced by CLAUDE.md are shared.
+.claude/settings.local.json
