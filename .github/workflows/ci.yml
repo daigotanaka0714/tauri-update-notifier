@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - main
+  # 【重要】宛先ブランチで絞らない。
+  #   main 宛てだけにすると、PR を積み重ねたとき（PR の base が別の PR の
+  #   ブランチのとき）に CI が一つも走らず、検証されないままマージされる。
   pull_request:
-    branches:
-      - main
 
 jobs:
   test:
