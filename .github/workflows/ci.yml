@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-  # 【重要】宛先ブランチで絞らない。
-  #   main 宛てだけにすると、PR を積み重ねたとき（PR の base が別の PR の
-  #   ブランチのとき）に CI が一つも走らず、検証されないままマージされる。
+  # IMPORTANT: do not filter by target branch.
+  #   Restricting this to main means a stacked PR - one whose base is another
+  #   PR's branch - gets no checks at all and can be merged unverified.
   pull_request:
 
 jobs:

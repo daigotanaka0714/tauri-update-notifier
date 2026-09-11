@@ -116,15 +116,16 @@ export function useUpdateChecker(options: {
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // 【重要】コールバックと実行中フラグは ref に逃がす。
+  // IMPORTANT: keep the callbacks and the in-flight flag in refs.
   //
-  //   これらを performCheck の依存配列に入れると、チェックのたびに
-  //   performCheck の同一性が変わる。performCheck は下の useEffect の
-  //   依存にも入っているので、エフェクトが毎回貼り直され、
-  //   「マウント時に一度だけ」のはずの 2 秒タイマーが再武装され続ける。
-  //   結果として checkInterval=0（無効）でも GitHub API を 2 秒おきに
-  //   叩き続ける。未認証の GitHub API は 1 時間 60 回なので、
-  //   2 分で使い切って以降 403 になる。テストで実測して判明した。
+  //   Putting them in performCheck's dependency array changes performCheck's
+  //   identity on every check. performCheck is also a dependency of the
+  //   effect below, so that effect tears down and re-arms its 2-second
+  //   "check once on mount" timer every time - forever.
+  //   The result was a request to the GitHub API every 2 seconds even with
+  //   checkInterval: 0 (disabled). The unauthenticated GitHub API allows 60
+  //   requests per hour, so that budget is gone in two minutes and every
+  //   later check fails with 403. Found by measuring it in a test.
   const isCheckingRef = useRef(false);
   const onUpdateAvailableRef = useRef(onUpdateAvailable);
   const onErrorRef = useRef(onError);

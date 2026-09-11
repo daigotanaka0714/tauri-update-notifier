@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dismissedVersionStorage, type UpdateInfo } from "../updateChecker";
 import { UpdateNotification } from "./UpdateNotification";
 
-// ネットワーク境界（GitHub Releases を叩く checkForUpdates）だけを差し替える。
-// dismissedVersionStorage は jsdom の localStorage をそのまま使わせて
-// 「スキップしたら次は出ない」という実際の振る舞いを検証する。
+// Only the network boundary is mocked: checkForUpdates, which calls the GitHub
+// Releases API. dismissedVersionStorage is left to use jsdom's real
+// localStorage, so "skip a version and it stays gone" is verified for real.
 vi.mock("../updateChecker", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../updateChecker")>();
   return { ...actual, checkForUpdates: vi.fn() };
@@ -20,7 +20,7 @@ const UPDATE: UpdateInfo = {
   currentVersion: "1.0.0",
   latestVersion: "1.2.0",
   releaseUrl: "https://github.com/acme/app/releases/tag/v1.2.0",
-  releaseNotes: "バグ修正と改善",
+  releaseNotes: "Bug fixes and improvements",
   publishedAt: "2026-01-01T00:00:00Z",
   assets: [],
 };
@@ -31,8 +31,8 @@ const NO_UPDATE: UpdateInfo = {
   latestVersion: "1.0.0",
 };
 
-// コンポーネントはマウント 2 秒後に初回チェックする。
-// 偽タイマーを進めたうえで、非同期の checkForUpdates が解決するまで待つ。
+// The component runs its first check 2 seconds after mount. Advance the fake
+// timers and then let the async checkForUpdates promise settle.
 async function advancePastInitialCheck() {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(2000);
@@ -63,8 +63,8 @@ afterEach(() => {
 });
 
 describe("UpdateNotification", () => {
-  describe("表示の条件", () => {
-    it("更新があればマウント後の初回チェックで通知を出す", async () => {
+  describe("when it shows", () => {
+    it("shows the notification once the first check finds an update", async () => {
       renderNotification();
 
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("UpdateNotification", () => {
       expect(screen.getByText("1.0.0")).toBeVisible();
     });
 
-    it("更新が無ければ何も描画しない", async () => {
+    it("renders nothing when there is no update", async () => {
       checkForUpdatesMock.mockResolvedValue(NO_UPDATE);
 
       const { container } = renderNotification();
@@ -85,7 +85,7 @@ describe("UpdateNotification", () => {
       expect(container).toBeEmptyDOMElement();
     });
 
-    it("checkOnMount が false ならチェックしない", async () => {
+    it("does not check at all when checkOnMount is false", async () => {
       renderNotification({ checkOnMount: false });
       await advancePastInitialCheck();
 
@@ -93,7 +93,7 @@ describe("UpdateNotification", () => {
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
     });
 
-    it("すでにスキップ済みのバージョンは表示しない", async () => {
+    it("stays hidden for a version the user already skipped", async () => {
       dismissedVersionStorage.dismiss("app", "1.2.0");
 
       renderNotification();
@@ -102,7 +102,7 @@ describe("UpdateNotification", () => {
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
     });
 
-    it("スキップ済みでも別バージョンが出たら表示する", async () => {
+    it("still shows a different version after one was skipped", async () => {
       dismissedVersionStorage.dismiss("app", "1.1.0");
 
       renderNotification();
@@ -111,43 +111,44 @@ describe("UpdateNotification", () => {
       expect(screen.getByText("Update Available")).toBeVisible();
     });
 
-    it("リリースノートは 200 文字で切って省略記号を付ける", async () => {
+    it("truncates release notes at 200 characters with an ellipsis", async () => {
       checkForUpdatesMock.mockResolvedValue({
         ...UPDATE,
-        releaseNotes: "あ".repeat(250),
+        releaseNotes: "a".repeat(250),
       });
 
       renderNotification();
       await advancePastInitialCheck();
 
-      expect(screen.getByText(`${"あ".repeat(200)}...`)).toBeVisible();
+      expect(screen.getByText(`${"a".repeat(200)}...`)).toBeVisible();
     });
   });
 
-  describe("ユーザー操作", () => {
+  describe("user interaction", () => {
     async function setup(props = {}) {
       renderNotification(props);
       await advancePastInitialCheck();
 
-      // 【重要】通知を出すところまでは偽タイマーで一気に進め、
-      //   操作からは本物のタイマーに戻す。
-      //   userEvent は内部で自前の setTimeout を使うため、偽タイマーのまま
-      //   click() すると誰もそれを進めず、解決しないままタイムアウトする。
+      // IMPORTANT: fake timers get the component as far as showing the
+      //   notification, then hand back to real timers before interacting.
+      //   userEvent schedules its own setTimeout internally; clicking while
+      //   fake timers are installed leaves nobody to advance them, so the
+      //   click never resolves and the test times out.
       vi.useRealTimers();
       return userEvent.setup();
     }
 
-    it("閉じると通知は消えるが、スキップ扱いにはしない", async () => {
+    it("dismissing hides the notification without skipping the version", async () => {
       const user = await setup();
 
       await user.click(screen.getByRole("button", { name: "Close" }));
 
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
-      // 閉じただけなので次回起動時はまた出てほしい
+      // Dismissed, not skipped: it should come back on the next launch.
       expect(dismissedVersionStorage.isDismissed("app", "1.2.0")).toBe(false);
     });
 
-    it("Skip を押すとそのバージョンを記録して消える", async () => {
+    it("Skip records the version and hides the notification", async () => {
       const user = await setup();
 
       await user.click(screen.getByRole("button", { name: "Skip" }));
@@ -156,7 +157,7 @@ describe("UpdateNotification", () => {
       expect(dismissedVersionStorage.isDismissed("app", "1.2.0")).toBe(true);
     });
 
-    it("Download は onOpenUrl にリリース URL を渡す", async () => {
+    it("Download hands the release URL to onOpenUrl", async () => {
       const onOpenUrl = vi.fn();
       const user = await setup({ onOpenUrl });
 
@@ -165,7 +166,7 @@ describe("UpdateNotification", () => {
       expect(onOpenUrl).toHaveBeenCalledExactlyOnceWith(UPDATE.releaseUrl);
     });
 
-    it("onOpenUrl が無ければ window.open で開く", async () => {
+    it("falls back to window.open when onOpenUrl is not given", async () => {
       const open = vi.spyOn(window, "open").mockReturnValue(null);
       const user = await setup();
 
@@ -174,10 +175,10 @@ describe("UpdateNotification", () => {
       expect(open).toHaveBeenCalledWith(UPDATE.releaseUrl, "_blank");
     });
 
-    it("onOpenUrl が失敗したら window.open にフォールバックする", async () => {
+    it("falls back to window.open when onOpenUrl rejects", async () => {
       const open = vi.spyOn(window, "open").mockReturnValue(null);
       vi.spyOn(console, "error").mockImplementation(() => {});
-      const onOpenUrl = vi.fn().mockRejectedValue(new Error("Tauri 側で失敗"));
+      const onOpenUrl = vi.fn().mockRejectedValue(new Error("shell failed"));
       const user = await setup({ onOpenUrl });
 
       await user.click(screen.getByRole("button", { name: "Download" }));
@@ -186,8 +187,8 @@ describe("UpdateNotification", () => {
     });
   });
 
-  describe("コールバックと差し替え", () => {
-    it("更新を見つけたら onUpdateAvailable を呼ぶ", async () => {
+  describe("callbacks and custom rendering", () => {
+    it("calls onUpdateAvailable when an update is found", async () => {
       const onUpdateAvailable = vi.fn();
       renderNotification({ onUpdateAvailable });
 
@@ -196,7 +197,7 @@ describe("UpdateNotification", () => {
       expect(onUpdateAvailable).toHaveBeenCalledExactlyOnceWith(UPDATE);
     });
 
-    it("チェックに失敗したら onError を呼び、通知は出さない", async () => {
+    it("calls onError and shows nothing when the check fails", async () => {
       const error = new Error("GitHub API error");
       checkForUpdatesMock.mockRejectedValue(error);
       const onError = vi.fn();
@@ -208,18 +209,18 @@ describe("UpdateNotification", () => {
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
     });
 
-    it("render を渡すと既定の UI の代わりにそれを描画する", async () => {
+    it("renders the render prop instead of the default UI", async () => {
       renderNotification({
-        render: ({ updateInfo }) => <p>独自表示 {updateInfo.latestVersion}</p>,
+        render: ({ updateInfo }) => <p>Custom {updateInfo.latestVersion}</p>,
       });
 
       await advancePastInitialCheck();
 
-      expect(screen.getByText("独自表示 1.2.0")).toBeVisible();
+      expect(screen.getByText("Custom 1.2.0")).toBeVisible();
       expect(screen.queryByText("Update Available")).not.toBeInTheDocument();
     });
 
-    it("checkInterval を指定すると繰り返しチェックする", async () => {
+    it("checks repeatedly when checkInterval is set", async () => {
       renderNotification({ checkInterval: 60_000 });
       await advancePastInitialCheck();
       expect(checkForUpdatesMock).toHaveBeenCalledTimes(1);
@@ -232,17 +233,17 @@ describe("UpdateNotification", () => {
     });
   });
 
-  describe("回帰防止", () => {
-    // マウント時のチェックが再武装され、checkInterval=0（無効）でも
-    // 2 秒おきに GitHub API を叩き続けるバグがあった。
-    // 未認証の GitHub API は 1 時間 60 回なので 2 分で使い切る。
-    // 原因は performCheck の依存配列にコールバックと isChecking が入っていて、
-    // チェックのたびに同一性が変わり、それを依存に持つ useEffect が
-    // タイマーを貼り直していたこと。
-    it("checkInterval が既定（0）なら初回チェック以降は叩かない", async () => {
-      // 実物の checkForUpdates は fetch の結果なので毎回新しいオブジェクトを返す。
-      // 同じ参照を返すと React が再描画を省いてバグが再現しないため、
-      // ここは mockResolvedValue ではなく mockImplementation を使う。
+  describe("regressions", () => {
+    // The mount check used to re-arm itself, hitting the GitHub API every two
+    // seconds even with checkInterval at its default of 0 (disabled). The
+    // unauthenticated API allows 60 requests per hour, so that budget was gone
+    // in two minutes. The cause was performCheck listing the callbacks and
+    // isChecking in its dependency array: its identity changed on every check,
+    // and the effect that depends on it re-created the timer each time.
+    it("does not check again after the first one when checkInterval is default", async () => {
+      // The real checkForUpdates returns a fresh object each call (it is a
+      // fetch result). Returning the same reference lets React skip the
+      // re-render and hides the bug, so use mockImplementation here.
       checkForUpdatesMock.mockImplementation(async () => ({ ...NO_UPDATE }));
 
       renderNotification();
@@ -257,8 +258,8 @@ describe("UpdateNotification", () => {
       }
     });
 
-    it("前のチェックが終わる前に次のタイマーが来ても二重に叩かない", async () => {
-      // 応答が返ってこない状態を作る（回線が遅い / GitHub が詰まっている）
+    it("does not start a second request while one is still in flight", async () => {
+      // Simulate a response that never arrives (slow link, GitHub stalled).
       checkForUpdatesMock.mockImplementation(() => new Promise(() => {}));
 
       renderNotification({ checkInterval: 100 });
@@ -267,14 +268,14 @@ describe("UpdateNotification", () => {
         await vi.advanceTimersByTimeAsync(2000 + 100 * 20);
       });
 
-      // 初回チェックが終わっていないので、間隔タイマーが 20 回来ても
-      // 実際のリクエストは 1 本だけであること
+      // The first check has not finished, so 20 interval ticks must still
+      // produce exactly one request.
       expect(checkForUpdatesMock).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("アクセシビリティ", () => {
-    it("装飾アイコンは支援技術から隠す", async () => {
+  describe("accessibility", () => {
+    it("hides decorative icons from assistive technology", async () => {
       const { container } = renderNotification();
       await advancePastInitialCheck();
 
@@ -285,7 +286,7 @@ describe("UpdateNotification", () => {
       }
     });
 
-    it("ボタンは type=button（フォーム内で submit を暴発させない）", async () => {
+    it("gives every button an explicit type so it cannot submit a form", async () => {
       renderNotification();
       await advancePastInitialCheck();
 
@@ -296,7 +297,7 @@ describe("UpdateNotification", () => {
       }
     });
 
-    it("閉じるボタンはアイコンのみだがアクセシブルな名前を持つ", async () => {
+    it("gives the icon-only close button an accessible name", async () => {
       renderNotification();
       await advancePastInitialCheck();
 
