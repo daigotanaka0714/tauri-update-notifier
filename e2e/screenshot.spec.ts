@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test } from "@playwright/test";
 
-test.describe('Update Notification Screenshots', () => {
-  test('capture notification UI', async ({ page }) => {
-    await page.goto('/demo/index.html');
+test.describe("Update Notification Screenshots", () => {
+  test("capture notification UI", async ({ page }) => {
+    await page.goto("/demo/index.html");
 
     // Wait for the notification to be visible
     await page.waitForSelector('[data-testid="mock-app"]');
@@ -12,7 +12,7 @@ test.describe('Update Notification Screenshots', () => {
 
     // Take full page screenshot
     await page.screenshot({
-      path: 'screenshots/demo-full.png',
+      path: "screenshots/demo-full.png",
       fullPage: true,
     });
 
@@ -20,7 +20,7 @@ test.describe('Update Notification Screenshots', () => {
     const viewport = page.viewportSize();
     if (viewport) {
       await page.screenshot({
-        path: 'screenshots/notification-corner.png',
+        path: "screenshots/notification-corner.png",
         clip: {
           x: viewport.width - 400,
           y: viewport.height - 300,
@@ -31,8 +31,8 @@ test.describe('Update Notification Screenshots', () => {
     }
   });
 
-  test('capture notification in dark background', async ({ page }) => {
-    await page.goto('/demo/index.html');
+  test("capture notification in dark background", async ({ page }) => {
+    await page.goto("/demo/index.html");
     await page.waitForSelector('[data-testid="mock-app"]');
     await page.waitForTimeout(500);
 
@@ -40,7 +40,7 @@ test.describe('Update Notification Screenshots', () => {
     await page.setViewportSize({ width: 1280, height: 720 });
 
     await page.screenshot({
-      path: 'screenshots/demo-1280x720.png',
+      path: "screenshots/demo-1280x720.png",
     });
   });
 });

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # 【重要】バージョンはここに書かない。.node-version を唯一の出どころにする。
+          # ここに数字を直接書くとローカルとずれ、「CI だけ落ちる / CI だけ通る」が起きる。
+          node-version-file: '.node-version'
+
+      - name: Install pnpm
+        # 【重要】バージョンはここに書かない。package.json の packageManager を
+        # 唯一の出どころにする（ローカルは corepack が同じ値を読む）。
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: |
+          echo "::group::pnpm install"
+          pnpm install --frozen-lockfile
+          echo "::endgroup::"
+
+      - name: Check Biome (format + lint)
+        run: |
+          echo "::group::biome check"
+          pnpm exec biome check --error-on-warnings .
+          echo "::endgroup::"
+
+      - name: Check TypeScript
+        run: |
+          echo "::group::tsc --noEmit"
+          pnpm typecheck
+          echo "::endgroup::"
+
+      - name: Test
+        # e2e（Playwright）はここに入れない。README 用のスクリーンショットを
+        # 撮るだけでライブラリの正しさを検証していないため（bin/agent-check と同じ方針）。
+        run: |
+          echo "::group::vitest"
+          pnpm test
+          echo "::endgroup::"
+
+      - name: Build (npm 公開物)
+        run: |
+          echo "::group::tsup"
+          pnpm build
+          echo "::endgroup::"

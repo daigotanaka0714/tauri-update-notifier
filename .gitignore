@@ -33,3 +33,7 @@ demo-dist/
 # Playwright
 playwright-report/
 test-results/
+
+# Claude Code のローカル設定（共有するのは settings.json だけ）
+.claude/*
+!.claude/settings.json

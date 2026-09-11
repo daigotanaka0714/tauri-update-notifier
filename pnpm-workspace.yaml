@@ -1,0 +1,6 @@
+# pnpm 11 以降はビルドスクリプトの実行を明示的に許可する必要がある。
+# esbuild は vite / tsup が使うので許可する。
+# 許可が無いと pnpm install / pnpm add が「Ignored build scripts」で
+# エラー終了し、スクリプトが何も動かなくなる。
+allowBuilds:
+  esbuild: true
