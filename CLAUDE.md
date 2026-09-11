@@ -26,3 +26,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### カスタムコマンド
 - `/bugfix` - 体系的なバグ調査・修正ワークフロー
 - `/investigate` - コードベースの網羅的調査
+
+<!-- daigo-lab-ops:completion-criteria:start -->
+<!-- 自動生成。daigo-lab-ops/docs/completion-criteria.md が唯一の出どころ。
+     ここを手で編集しない。`lab sync` で作り直す。 -->
+
+## エージェントの完了条件
+
+### Definition of done
+
+1. This repository's `bin/agent-check` returns `STATUS: PASS`
+2. The change stays within what was asked for
+3. The PR is opened from a branch other than main / master
+
+### Do not
+
+- **Never push directly to the default branch.** Always branch and open a PR.
+- **Never merge.** `git merge` and `gh pr merge` are a human's job.
+- **Never edit the gate to make it pass.** If the gate needs to be relaxed,
+  propose that as its own PR and explain why.
+- **Never silence a lint rule to get green.** Fix what it reports.
+
+### When opening a PR
+
+- Do not put a Claude session URL (`claude.ai/code/session_...`) or a
+  `Claude-Session:` line in the PR body or in any commit message
+- **Always name the repository and include the URL when referring to a PR.**
+  `#24` alone does not identify anything when several repositories are in play
+- Never use `--delete-branch` on a stacked PR: deleting the base branch makes
+  GitHub auto-close the PR stacked on top of it
+
+<!-- daigo-lab-ops:completion-criteria:end -->
