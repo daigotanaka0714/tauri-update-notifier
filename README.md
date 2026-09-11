@@ -304,7 +304,7 @@ Then open http://localhost:3000/demo/index.html in your browser.
 pnpm playwright:install
 
 # Capture screenshots
-pnpm screenshot
+pnpm e2e
 ```
 
 Screenshots are saved to the `screenshots/` directory.

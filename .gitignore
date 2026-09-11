@@ -34,6 +34,6 @@ demo-dist/
 playwright-report/
 test-results/
 
-# Claude Code のローカル設定（共有するのは settings.json だけ）
-.claude/*
-!.claude/settings.json
+# Claude Code の設定。ローカル固有のものだけ無視し、
+# CLAUDE.md が案内している /bugfix と /investigate は共有する。
+.claude/settings.local.json
