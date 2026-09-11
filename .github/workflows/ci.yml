@@ -17,13 +17,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # 【重要】バージョンはここに書かない。.node-version を唯一の出どころにする。
-          # ここに数字を直接書くとローカルとずれ、「CI だけ落ちる / CI だけ通る」が起きる。
+          # IMPORTANT: do not write a version here. .node-version is the
+          # single source of truth. A number written here drifts from local
+          # and produces "green in CI, red locally" (or the reverse).
           node-version-file: '.node-version'
 
       - name: Install pnpm
-        # 【重要】バージョンはここに書かない。package.json の packageManager を
-        # 唯一の出どころにする（ローカルは corepack が同じ値を読む）。
+        # IMPORTANT: do not write a version here. package.json's
+        # packageManager field is the single source of truth (corepack reads
+        # the same value locally).
         uses: pnpm/action-setup@v4
 
       - name: Install dependencies
@@ -45,14 +47,15 @@ jobs:
           echo "::endgroup::"
 
       - name: Test
-        # e2e（Playwright）はここに入れない。README 用のスクリーンショットを
-        # 撮るだけでライブラリの正しさを検証していないため（bin/agent-check と同じ方針）。
+        # e2e (Playwright) is not run here: it only captures screenshots for
+        # the README and verifies nothing about the library (same policy as
+        # bin/agent-check).
         run: |
           echo "::group::vitest"
           pnpm test
           echo "::endgroup::"
 
-      - name: Build (npm 公開物)
+      - name: Build (published package)
         run: |
           echo "::group::tsup"
           pnpm build

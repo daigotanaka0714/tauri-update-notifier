@@ -1,27 +1,33 @@
 #!/usr/bin/env bash
 #
-# bin/agent-check — AIエージェントの「完了条件」チェッカー
+# bin/agent-check - the single command that decides whether this repo is "done".
 #
-# 使い方:
-#   ./bin/agent-check          # 全部の検査を走らせる
-#   ./bin/agent-check --fix    # 自動修正できるものを直してから検査する
+# Usage:
+#   ./bin/agent-check          # run every check
+#   ./bin/agent-check --fix    # auto-fix what can be fixed, then check
 #
-# 終了コード: 0=green / 1=いずれかの検査が失敗
+# Exit code: 0 = green / 1 = at least one check failed
+#
+# Plain bash plus pnpm. No editor, agent or AI tooling is required to run it.
+# .github/workflows/ci.yml runs the same commands in the same order, so a local
+# PASS is a good predictor of a green CI run. If one has to change, change both:
+# a gate that disagrees with CI is worse than no gate at all.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
-# 【重要】NODE_ENV はステージ単位で指定する。スクリプト全体で固定してはいけない。
+# IMPORTANT: set NODE_ENV per stage. Never pin it for the whole script.
 #
-#   Claude デスクトップのようなホストプロセスは NODE_ENV=production を持っており、
-#   そこから起動したエージェントのシェルはそれを継承する。
-#   その状態で vitest を走らせると React が production ビルドに解決され、
-#   act() が使えずテストが全滅する。
-#   一方でスクリプト全体を NODE_ENV=test で固定すると、今度はライブラリの
-#   ビルド成果物が本番と変わってしまう（このリポジトリは npm 公開物を作る）。
+#   A parent process (a desktop agent host, for example) may carry
+#   NODE_ENV=production, and any shell started from it inherits that.
+#   Run vitest in that state and React resolves to its production build,
+#   act() is unavailable, and every test fails.
+#   But pinning the whole script to NODE_ENV=test is wrong too: this repo
+#   builds a package that gets published to npm, and that build must run
+#   in production mode.
 #
-#   だからステージごとに「そのステージが必要とする NODE_ENV」を渡す。
-#   継承した値をそのまま使うステージを作らないこと。
+#   So each stage is handed the NODE_ENV it actually needs.
+#   No stage may rely on the inherited value.
 NODE_ENV_TEST=test
 NODE_ENV_BUILD=production
 
@@ -35,17 +41,17 @@ for arg in "$@"; do
 done
 
 PNPM="pnpm"
-command -v pnpm >/dev/null 2>&1 || { echo "pnpm が見つかりません" >&2; exit 2; }
+command -v pnpm >/dev/null 2>&1 || { echo "pnpm not found" >&2; exit 2; }
 
 FAILED_STAGE=""
 TIMINGS=""
 
 run_stage() {
-  # run_stage <stage名> <説明> <コマンド...>
+  # run_stage <stage> <description> <command...>
   local name="$1"; shift
   local desc="$1"; shift
   local start end out rc
-  printf '── %-10s %s\n' "$name" "$desc"
+  printf '>>> %-10s %s\n' "$name" "$desc"
   start=$(date +%s)
   out=$("$@" 2>&1)
   rc=$?
@@ -60,28 +66,28 @@ run_stage() {
 }
 
 if [ "$FIX" = "1" ]; then
-  echo "── fix        biome check --write"
+  echo ">>> fix        biome check --write"
   env NODE_ENV="$NODE_ENV_TEST" $PNPM exec biome check --write . >/dev/null 2>&1
 fi
 
 OK=1
 
-# 警告を握りつぶす仕組み（許容件数のラチェット等）はあえて入れていない。
-# 「あと N 件までは許す」は必ず N が増える方向にしか動かないため、
-# --error-on-warnings で「警告ゼロ」を天井に固定する。
+# There is deliberately no mechanism for tolerating warnings (no "allow up to N"
+# ratchet). Such a budget only ever moves in one direction, so --error-on-warnings
+# fixes the ceiling at zero instead.
 run_stage lint "biome check --error-on-warnings" \
   env NODE_ENV="$NODE_ENV_TEST" $PNPM exec biome check --error-on-warnings . || OK=0
 
 run_stage typecheck "tsc --noEmit" \
   env NODE_ENV="$NODE_ENV_TEST" $PNPM exec tsc --noEmit || OK=0
 
-# e2e（Playwright のスクリーンショット撮影）はゲートに含めない。
-# ブラウザのインストールが要るうえ、撮るのは README 用の画像であって
-# ライブラリの正しさを検証していないため。手で撮るときは pnpm e2e。
+# e2e (Playwright screenshot capture) is not part of the gate: it needs a browser
+# install and only produces the README images - it verifies nothing about the
+# library itself. Run it by hand with `pnpm e2e`.
 run_stage test "vitest run" \
   env NODE_ENV="$NODE_ENV_TEST" $PNPM exec vitest run || OK=0
 
-run_stage build "tsup（npm 公開物のビルド）" \
+run_stage build "tsup (builds the published package)" \
   env NODE_ENV="$NODE_ENV_BUILD" $PNPM exec tsup || OK=0
 
 echo
@@ -89,13 +95,13 @@ echo "=== AGENT-CHECK RESULT ==="
 if [ "$OK" = "1" ]; then
   echo "STATUS: PASS"
   echo "TIMINGS: ${TIMINGS}"
-  echo "NEXT: PR を作成してよい。マージは人間が行うため、マージはしないこと。"
+  echo "NEXT: Safe to open a PR. Do not merge - a human reviews and merges."
   exit 0
 else
   echo "STATUS: FAIL"
   echo "FAILED_STAGE: $FAILED_STAGE"
   echo "TIMINGS: ${TIMINGS}"
-  echo "NEXT: 上の $FAILED_STAGE エラーを修正し、bin/agent-check を再実行すること。"
-  echo "NEXT: green になるまで PR を作成しないこと。"
+  echo "NEXT: Fix the $FAILED_STAGE errors above and re-run bin/agent-check."
+  echo "NEXT: Do not open a PR until this is green."
   exit 1
 fi
