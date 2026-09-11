@@ -261,8 +261,6 @@ function App() {
 
 const container = document.getElementById("root");
 if (!container) {
-  throw new Error(
-    "#root が見つかりません（demo/index.html を確認してください）",
-  );
+  throw new Error("#root not found - check demo/index.html");
 }
 createRoot(container).render(<App />);
