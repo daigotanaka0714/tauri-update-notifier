@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -115,9 +116,25 @@ export function useUpdateChecker(options: {
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const performCheck = useCallback(async () => {
-    if (isChecking) return null;
+  // 【重要】コールバックと実行中フラグは ref に逃がす。
+  //
+  //   これらを performCheck の依存配列に入れると、チェックのたびに
+  //   performCheck の同一性が変わる。performCheck は下の useEffect の
+  //   依存にも入っているので、エフェクトが毎回貼り直され、
+  //   「マウント時に一度だけ」のはずの 2 秒タイマーが再武装され続ける。
+  //   結果として checkInterval=0（無効）でも GitHub API を 2 秒おきに
+  //   叩き続ける。未認証の GitHub API は 1 時間 60 回なので、
+  //   2 分で使い切って以降 403 になる。テストで実測して判明した。
+  const isCheckingRef = useRef(false);
+  const onUpdateAvailableRef = useRef(onUpdateAvailable);
+  const onErrorRef = useRef(onError);
+  onUpdateAvailableRef.current = onUpdateAvailable;
+  onErrorRef.current = onError;
 
+  const performCheck = useCallback(async () => {
+    if (isCheckingRef.current) return null;
+
+    isCheckingRef.current = true;
     setIsChecking(true);
     setError(null);
 
@@ -132,27 +149,20 @@ export function useUpdateChecker(options: {
       setUpdateInfo(info);
 
       if (info.isUpdateAvailable) {
-        onUpdateAvailable?.(info);
+        onUpdateAvailableRef.current?.(info);
       }
 
       return info;
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
-      onError?.(error);
+      onErrorRef.current?.(error);
       return null;
     } finally {
+      isCheckingRef.current = false;
       setIsChecking(false);
     }
-  }, [
-    owner,
-    repo,
-    currentVersion,
-    includePrerelease,
-    isChecking,
-    onUpdateAvailable,
-    onError,
-  ]);
+  }, [owner, repo, currentVersion, includePrerelease]);
 
   // Check on mount
   useEffect(() => {

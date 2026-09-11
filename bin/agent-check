@@ -78,8 +78,11 @@ run_stage typecheck "tsc --noEmit" \
 # e2e（Playwright のスクリーンショット撮影）はゲートに含めない。
 # ブラウザのインストールが要るうえ、撮るのは README 用の画像であって
 # ライブラリの正しさを検証していないため。手で撮るときは pnpm e2e。
-run_stage test "vitest run" \
-  env NODE_ENV="$NODE_ENV_TEST" $PNPM exec vitest run || OK=0
+#
+# カバレッジはここで一緒に測る。vitest.config.ts にしきい値を置いてあるので、
+# 下回ればこのステージが落ちる。「測ってはいるが誰も見ていない数字」にしない。
+run_stage test "vitest run --coverage（しきい値つき）" \
+  env NODE_ENV="$NODE_ENV_TEST" $PNPM exec vitest run --coverage || OK=0
 
 run_stage build "tsup（npm 公開物のビルド）" \
   env NODE_ENV="$NODE_ENV_BUILD" $PNPM exec tsup || OK=0

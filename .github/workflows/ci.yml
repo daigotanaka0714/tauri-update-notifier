@@ -49,7 +49,7 @@ jobs:
         # 撮るだけでライブラリの正しさを検証していないため（bin/agent-check と同じ方針）。
         run: |
           echo "::group::vitest"
-          pnpm test
+          pnpm test:coverage
           echo "::endgroup::"
 
       - name: Build (npm 公開物)
