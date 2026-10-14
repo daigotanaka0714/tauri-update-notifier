@@ -371,11 +371,11 @@ export function UpdateNotification({
         if (onOpenUrl) {
           await onOpenUrl(updateInfo.releaseUrl);
         } else {
-          window.open(updateInfo.releaseUrl, "_blank");
+          window.open(updateInfo.releaseUrl, "_blank", "noopener,noreferrer");
         }
       } catch (error) {
         console.error("Failed to open URL:", error);
-        window.open(updateInfo.releaseUrl, "_blank");
+        window.open(updateInfo.releaseUrl, "_blank", "noopener,noreferrer");
       }
     }
   }, [updateInfo, onOpenUrl]);
