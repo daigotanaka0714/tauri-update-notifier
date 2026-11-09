@@ -47,10 +47,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   propose that as its own PR and explain why.
 - **Never silence a lint rule to get green.** Fix what it reports.
 
+### While working
+
+- **Do not chain shell commands with `&&` or `;`.** Run `cd` as its own call
+  too. The auto mode classifier reads a chained command as one unit and
+  blocks the whole thing (`cd <dir> && <script that creates a worktree>` was
+  blocked; the same commands run separately went through). A chained command
+  also stops matching the `Bash(...)` permission rules, which match by prefix
+
+### When writing
+
+Code comments, docs, commit messages and PR bodies.
+
+- Keep it short and factual. Do not restate what the diff already shows
+- Put a half-width space outside `**…**` when it sits next to other text.
+  GitHub does not render `これは**「重要」**です` as bold when the bold text
+  starts or ends with punctuation. Run `lab mdcheck <file>` or
+  `lab mdcheck --pr <number>` before posting a PR body, draft or result file
+- Keep temporary circumstances (a staged rollout, a workaround until a fix
+  ships) out of code, comments and docs. Put them in the PR body if needed
+- Do not annotate only some items in a list. Match how the others are written
+- Do not write what you have not verified. Mark a guess as unverified
+- In anything posted outside (PR bodies, issues, comments), do not write what
+  only you know: local labels such as review-note numbers, local file names,
+  exchanges with the coordinator or other agents, or how a branch was rebuilt
+- Do not describe fixes as a diff from an earlier draft. Fold them into the
+  section they belong to (what is checked and how). A reader of an unreviewed
+  PR has no "before" to compare with
+- Before posting, check that no local-only number or file name slipped in
+- Do not write a bare word starting with `@` in commit messages, PR bodies
+  or comments. GitHub notifies the user or team with that name (an E2E tag
+  such as `@smoke`, a package such as `@types/node`). Wrap it in backticks or
+  drop the `@`. `lab mdcheck` reports bare `@` words outside backticks
+
 ### When opening a PR
 
 - Do not put a Claude session URL (`claude.ai/code/session_...`) or a
   `Claude-Session:` line in the PR body or in any commit message
+- Do not add a `🤖 Generated with Claude Code` line to the PR body or to any
+  commit message. This is a backstop: the real fix is `attribution.pr: ""` in
+  the user's Claude Code settings, which is where the instruction comes from
 - **Always name the repository and include the URL when referring to a PR.**
   `#24` alone does not identify anything when several repositories are in play
 - Stacked PRs: before merging the base PR, re-target the one stacked on top of
@@ -58,5 +94,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   base deletes its branch, and that takes the stacked PR with it. Most of these
   repositories delete the branch on merge automatically, so this is a step you
   have to take, not an option you can decline
+
+### When updating a PR body
+
+- Update it with `gh api`. To pass the body from a file, use an uppercase
+  `-F body=@<file>`:
+  `gh api -X PATCH repos/<owner>/<repo>/pulls/<number> -F body=@<file>`.
+  With a lowercase `-f`, the literal string `@<file>` becomes the body
+- After updating, fetch the body again (`gh pr view <number> --json body`)
+  and check that it changed
 
 <!-- daigo-lab-ops:completion-criteria:end -->
