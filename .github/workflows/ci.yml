@@ -9,6 +9,9 @@ on:
   #   PR's branch - gets no checks at all and can be merged unverified.
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -172,7 +172,11 @@ describe("UpdateNotification", () => {
 
       await user.click(screen.getByRole("button", { name: "Download" }));
 
-      expect(open).toHaveBeenCalledWith(UPDATE.releaseUrl, "_blank");
+      expect(open).toHaveBeenCalledWith(
+        UPDATE.releaseUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
     });
 
     it("falls back to window.open when onOpenUrl rejects", async () => {
@@ -183,7 +187,11 @@ describe("UpdateNotification", () => {
 
       await user.click(screen.getByRole("button", { name: "Download" }));
 
-      expect(open).toHaveBeenCalledWith(UPDATE.releaseUrl, "_blank");
+      expect(open).toHaveBeenCalledWith(
+        UPDATE.releaseUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
     });
   });
 
